@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  acme:
+    container_name: acme
+    # Image for acme.sh
+    image: docker.io/neilpang/acme.sh:3.0.6
+    # Issue cert through ACME
+    # https://developer.hashicorp.com/vault/api-docs/secret/pki#acme-certificate-issuance
+    command: /bin/sh -c "sleep 3600"
+    #entrypoint: /scripts/certbot-entrypoint.sh
+    volumes:
+      # Mount for acme.sh with automatic and manual CSR
+      - tls:/acme.sh/app.dns.podman
+      # Mount docker socket to restart Nginx through Docker API
+      # (scripts/restart.sh)
+      # find socket with 
+      # $ podman info -f json | jq -r '.[].remoteSocket.path'
+      - /run/user/1000/podman/podman.sock:/var/run/docker.sock:Z
+    ports:
+      - target: 80
+        protocol: tcp
+
+  vault-server:
+    container_name: vault-server
+    image: docker.io/hashicorp/vault:1.14.1
+    command: /bin/sh -c "vault server -config=/vault/config -dev-root-token-id=root -dev-listen-address=0.0.0.0:8200 -dev-tls -dev-tls-cert-dir=/vault/tls"
+    environment:
+      - VAULT_ADDR=https://127.0.0.1:8200      # cli config
+      - VAULT_TOKEN=root                      # cli config
+    ports:
+      - target: 8200
+        published: 8200
+        protocol: tcp
+    volumes:
+      - server-tls:/vault/tls:z
+
+
+volumes:
+  tls:
+  server-tls:

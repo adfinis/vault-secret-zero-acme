@@ -1,0 +1,17 @@
+1. Clone repo
+2. Switch into repo folder
+3. Uncomment line 9 in the docker-compose.yaml
+4. podman-compose up -d
+5. ./provision-vault.sh
+6. podman exec -it certbot /bin/sh
+# Step 7 is only needed if you aren't fast enough with the provision-vault script
+7. acme.sh --server https://vault-server:8200/v1/pki/roles/app-example-com/acme/directory --insecure --standalone --issue -d certbot.dns.podman -k 2048
+8.
+    curl \
+    --insecure \
+    --request POST \
+    --cacert /acme.sh/certbot.dns.podman/ca.cer \
+    --cert /acme.sh/certbot.dns.podman/certbot.dns.podman.cer \
+    --key /acme.sh/certbot.dns.podman/certbot.dns.podman.key \
+    https://vault-server:8200/v1/auth/cert/login
+
