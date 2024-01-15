@@ -42,8 +42,7 @@ vault write -format=json pki/root/generate/internal common_name=example.com ttl=
 # - https://developer.hashicorp.com/vault/api-docs/secret/pki#ext_key_usage
 #
 # Deliberately choose low ttl for the certificate (only used for first
-# authentication, the periodic Token of vault agent auto-auth is used for
-# reneweal)
+# authentication)
 vault write pki/roles/acme-example-com allowed_domains=acme.dns.podman allow_subdomains=true allow_bare_domains=true max_ttl=5m ttl=2m \
   client_flag=true \
   server_flag=false \
@@ -56,7 +55,7 @@ vault write pki/roles/acme-example-com allowed_domains=acme.dns.podman allow_sub
 # Setup basic Cert auth role app-example-com to authenticate clients in the example domain
 # https://developer.hashicorp.com/vault/docs/auth/cert
 vault auth enable cert
-vault write auth/cert/certs/acme-example-com certificate=@ca-cert.pem token_ttl=5m token_max_ttl=10m token_period=5m policies=vault-agent 
+vault write auth/cert/certs/acme-example-com certificate=@ca-cert.pem token_ttl=5m token_max_ttl=10m token_period=5m policies=vault-acme 
 echo '
 path "pki/issue/acme-example-com" {
   capabilities = ["create", "update"]

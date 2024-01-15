@@ -7,8 +7,7 @@ engines.
 ## Container setup
 | Container Name     | Container/host port mapping | Description                                                                                          |
 | ------------------ | --------------------------- | ---------------------------------------------------------------------------------------------------- |
-| **`app`**          | `8443 -> 4433`              | The Nginx container in this setup represents the end-consumer, the application                       |
-| **`certbot`**      |                             | The application (Nginx) communicates with HashiCorp Vault server API through a certbot container     |
+| **`acme`**      |                             | The Acme container is used for requesting certificates and logging into vault     |
 | **`vault server`** | `8200 -> 8200`              | The HashiCorp Vault dev server is run as a dedicated single-node container                           |
 ## Quick Walktrough
  the [Quick Guide](step-by-step)
@@ -80,8 +79,7 @@ Make the role issue client certs:
  - https://developer.hashicorp.com/vault/api-docs/secret/pki#ext_key_usage
 
  Deliberately choose low ttl for the certificate (only used for first
- authentication, the periodic Token of vault agent auto-auth is used for
- reneweal)
+ authentication)
 ```bash
 vault write pki/roles/app-example-com allowed_domains=acme.dns.podman allow_subdomains=true allow_bare_domains=true max_ttl=5m ttl=2m \
   client_flag=true \
@@ -93,7 +91,7 @@ Setup basic Cert auth role app-example-com to authenticate clients in the exampl
  - https://developer.hashicorp.com/vault/docs/auth/cert
 ```bash
 vault auth enable cert
-vault write auth/cert/certs/acme-example-com certificate=@ca-cert.pem token_ttl=5m token_max_ttl=10m token_period=5m policies=vault-agent 
+vault write auth/cert/certs/acme-example-com certificate=@ca-cert.pem token_ttl=5m token_max_ttl=10m token_period=5m policies=vault-acme 
 echo '
 path "pki/issue/acme-example-com" {
   capabilities = ["create", "update"]
