@@ -24,25 +24,25 @@ docker-compose up -d
 ```
 
 Setup the configuration on the Vault development server:
-# Vault server location and credentials
+Vault server location and credentials
 ```bash
 export VAULT_ADDR=https://127.0.0.1:8200
 export VAULT_SKIP_VERIFY=1
 export VAULT_TOKEN=root
 ```
 
-# Enable auditing for debugging purposes
+Enable auditing for debugging purposes
 ```bash
 vault audit enable file path=stdout
 ```
 
-# Setup a very basic PKI role for issuing client certificates
+Setup a very basic PKI role for issuing client certificates
 https://developer.hashicorp.com/vault/docs/secrets/pki/setup
 ```bash
 vault secrets enable -path=pki pki
 ```
 
-# Ensure cluster-local configuration prerequisites for ACME
+Ensure cluster-local configuration prerequisites for ACME
 https://developer.hashicorp.com/vault/tutorials/secrets-management/pki-caddy#configure-acme
 ```bash
 vault write pki/config/cluster \
@@ -50,7 +50,7 @@ vault write pki/config/cluster \
    aia_path=https://vault-server:8200/v1/pki
 ```
 
-# Enable ACME headers
+Enable ACME headers
 ```bash
 vault secrets tune \
  -passthrough-request-headers=If-Modified-Since \
@@ -61,7 +61,7 @@ vault secrets tune \
  pki
 ```
 
-# Enable ACME and allow to request clientAuth extended key usage
+Enable ACME and allow to request clientAuth extended key usage
 https://developer.hashicorp.com/vault/api-docs/secret/pki#set-acme-configuration
 ```bash
 vault write pki/config/acme \
@@ -69,12 +69,12 @@ vault write pki/config/acme \
  allow_role_ext_key_usage=true
 ```
 
-# Create internal CA and role to issue client certitificates in the acme.example.com network
+Create internal CA and role to issue client certitificates in the acme.example.com network
 ```bash
 vault write -format=json pki/root/generate/internal common_name=example.com ttl=768h | jq -r '.data.issuing_ca' > ca-cert.pem
 ```
 
-# Make the role issue client certs:
+Make the role issue client certs:
  - https://developer.hashicorp.com/vault/api-docs/secret/pki#client_flag
  - https://developer.hashicorp.com/vault/api-docs/secret/pki#server_flag
  - https://developer.hashicorp.com/vault/api-docs/secret/pki#ext_key_usage
@@ -89,7 +89,7 @@ vault write pki/roles/app-example-com allowed_domains=acme.dns.podman allow_subd
   ext_key_usage=ClientAuth
 ```
 
-# Setup basic Cert auth role app-example-com to authenticate clients in the example domain
+Setup basic Cert auth role app-example-com to authenticate clients in the example domain
  - https://developer.hashicorp.com/vault/docs/auth/cert
 ```bash
 vault auth enable cert
@@ -101,15 +101,35 @@ path "pki/issue/acme-example-com" {
 ' | vault policy write vault-app -
 ```
 
-
-# create acme.sh account
-acme.sh --register-account -m my@example.com
-
-# acme.sh request with automatic CSR
-
 ## ACME
+Use the shell of the acme pod
+```bash
+podman exec -it acme /bin/sh
+```
 
+create acme.sh account
+```bash
+acme.sh --register-account -m my@example.com
+```
 
+acme.sh request with automatic CSR
+```bash
+acme.sh --server https://vault-server:8200/v1/pki/roles/acme-example-com/acme/directory \
+  --insecure \
+  --standalone --issue -d acme.dns.podman \
+  -k 2048
+```
+
+Authenticate at Vault
+```bash
+curl \
+  --insecure \
+  --request POST \
+  --cacert /acme.sh/acme.dns.podman/ca.cer \
+  --cert /acme.sh/acme.dns.podman/acme.dns.podman.cer \
+  --key /acme.sh/acme.dns.podman/acme.dns.podman.key \
+  https://vault-server:8200/v1/auth/cert/login
+```
 ## Reset
 
 For Podman:
@@ -123,5 +143,3 @@ For Docker:
 docker-compose down
 docker volume rm pki-demo_tls
 ```
-
-

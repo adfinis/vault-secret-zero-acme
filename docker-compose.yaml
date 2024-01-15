@@ -7,7 +7,7 @@ services:
     # Issue cert through ACME
     # https://developer.hashicorp.com/vault/api-docs/secret/pki#acme-certificate-issuance
     command: /bin/sh -c "sleep 3600"
-    #entrypoint: /scripts/certbot-entrypoint.sh
+    #entrypoint: /scripts/acme-entrypoint.sh
     volumes:
       # Mount for acme.sh with automatic and manual CSR
       - tls:/acme.sh/app.dns.podman
@@ -33,7 +33,6 @@ services:
         protocol: tcp
     volumes:
       - server-tls:/vault/tls:z
-
 
 volumes:
   tls:
