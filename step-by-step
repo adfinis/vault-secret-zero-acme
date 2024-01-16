@@ -5,7 +5,7 @@
 5. ./provision-vault.sh
 6. podman exec -it acme /bin/sh
 # Step 7 is only needed if you aren't fast enough with the provision-vault script
-7. acme.sh --server https://vault-server:8200/v1/pki/roles/app-example-com/acme/directory --insecure --standalone --issue -d acme.dns.podman -k 2048
+7. acme.sh --server https://vault-server:8200/v1/pki/roles/acme-dns-podman/acme/directory --insecure --standalone --issue -d acme.dns.podman -k 2048
 8.
     curl \
     --insecure \
@@ -13,5 +13,7 @@
     --cacert /acme.sh/acme.dns.podman/ca.cer \
     --cert /acme.sh/acme.dns.podman/acme.dns.podman.cer \
     --key /acme.sh/acme.dns.podman/acme.dns.podman.key \
-    https://vault-server:8200/v1/auth/cert/login
+    https://vault-server:8200/v1/auth/cert/login | jq -r '.auth.client_token' > token.txt
 
+9. curl -k -X GET -H "X-Vault-Token: $(cat token.txt)" https://vault-server:8200/v1/kv-v2/data/acme_demo_a/test
+10. curl -k -X GET -H "X-Vault-Token: $(cat token.txt)" https://vault-server:8200/v1/kv-v2/data/acme_demo_b/test 
