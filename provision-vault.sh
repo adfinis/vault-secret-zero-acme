@@ -34,8 +34,8 @@ vault write pki/config/acme \
  enabled=true \
  allow_role_ext_key_usage=true
 
-# Create internal CA and role to issue client certitificates in the app.example.com network
-vault write -format=json pki/root/generate/internal common_name=example.com ttl=768h | jq -r '.data.issuing_ca' > ca-cert.pem
+# Create internal CA and role to issue client certitificates in the acme.podman.dns network
+vault write -format=json pki/root/generate/internal common_name=podman.dns ttl=768h | jq -r '.data.issuing_ca' > ca-cert.pem
 # Make the role issue client certs:
 # - https://developer.hashicorp.com/vault/api-docs/secret/pki#client_flag
 # - https://developer.hashicorp.com/vault/api-docs/secret/pki#server_flag
@@ -43,22 +43,34 @@ vault write -format=json pki/root/generate/internal common_name=example.com ttl=
 #
 # Deliberately choose low ttl for the certificate (only used for first
 # authentication)
-vault write pki/roles/acme-example-com allowed_domains=acme.dns.podman allow_subdomains=true allow_bare_domains=true max_ttl=5m ttl=2m \
+vault write pki/roles/acme-dns-podman allowed_domains=acme.dns.podman allow_subdomains=true allow_bare_domains=true max_ttl=60m ttl=30m \
   client_flag=true \
   server_flag=false \
   ext_key_usage=ClientAuth
 
-# Create traditional PKI engine without ACME for the final application certificates
-#vault secrets enable -path=pki_int pki
-#vault write pki/root/generate/internal common_name=example.com ttl=768h
-
-# Setup basic Cert auth role app-example-com to authenticate clients in the example domain
+# Setup basic Cert auth role acme-dns-podman to authenticate clients in the example domain
+# This is a example for pre-provisiong roles to the Client
 # https://developer.hashicorp.com/vault/docs/auth/cert
 vault auth enable cert
-vault write auth/cert/certs/acme-example-com certificate=@ca-cert.pem token_ttl=5m token_max_ttl=10m token_period=5m policies=vault-acme 
+vault write auth/cert/certs/acme-dns-podman certificate=@ca-cert.pem allowed_common_names="acme.dns.podman" token_ttl=15m token_max_ttl=30m token_period=15m
+
+# Create policy acme_demo_a
 echo '
-path "pki/issue/acme-example-com" {
-  capabilities = ["create", "update"]
+path "kv-v2/data/acme_demo_a/*" {
+  capabilities = ["read"]
 }
-' | vault policy write vault-app -
- 
+' | vault policy write acme_demo_a_read -
+
+# Enable kv-v2 secrets engine and store secrets at 2 different paths
+vault secrets enable kv-v2
+vault kv put kv-v2/acme_demo_a/test key=you_should_see_this
+vault kv put kv-v2/acme_demo_b/test key=you_cant_see_this
+
+# Read authentication method accessor for alias creation
+vault auth list -format=json | jq -r '.["cert/"].accessor' > acme.txt
+
+# Create entity with connected policy and store the entitiy_id
+vault write -format=json identity/entity name="acme.dns.podman" policies="acme_demo_a_read" | jq -r ".data.id" > entity_id.txt
+
+# Create alias with entity_id and auth_accessor
+vault write identity/entity-alias name="acme.dns.podman" canonical_id=$(cat entity_id.txt) mount_accessor=$(cat acme.txt)
