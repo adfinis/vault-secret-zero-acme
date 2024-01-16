@@ -71,7 +71,7 @@ vault write pki/config/acme \
 
 Create internal CA and role to issue client certitificates in the acme.example.com network
 ```bash
-vault write -format=json pki/root/generate/internal common_name=example.com ttl=768h | jq -r '.data.issuing_ca' > ca-cert.pem
+vault write -format=json pki/root/generate/internal common_name=podman.dns ttl=768h | jq -r '.data.issuing_ca' > ca-cert.pem
 ```
 ## Provision cert auth role to enable acme.dns.podman
 Make the role issue client certs:
@@ -92,25 +92,15 @@ Setup basic Cert auth role app-example-com to authenticate clients in the exampl
  - https://developer.hashicorp.com/vault/docs/auth/cert
 ```bash
 vault auth enable cert
-vault write auth/cert/certs/acme-dns-podman certificate=@ca-cert.pem allowed_common_names="acme.dns.podman" token_ttl=15m token_max_ttl=30m token_period=15m policies=vault-acme 
+vault write auth/cert/certs/acme-dns-podman certificate=@ca-cert.pem allowed_common_names="acme.dns.podman" token_ttl=15m token_max_ttl=30m token_period=15m
 
 ```
 
-```bash
-# Example for a different CN
-vault write auth/cert/certs/app-dns-podman certificate=@ca-cert.pem allowed_common_names="app.dns.podman" token_ttl=15m token_max_ttl=30m token_period=15m policies=vault-app
-```
-
-```bash
-# Globbing for CN 
-# https://github.com/gobwas/glob
-vault write auth/cert/certs/cluster-a-dns-podman certificate=@ca-cert.pem allowed_common_names="*.cluster-a.dns.podman" token_ttl=15m token_max_ttl=30m token_period=15m policies=vault-cluster-a
-```
 ## Activate KV Secrets Engine and provision secrets and policies
 Policy to read and write passwords for path secret/data/acme_demo_a
 ```bash
 echo '
-path "secret/data/acme_demo_a/*" {
+path "kv-v2/data/acme_demo_a/*" {
   capabilities = ["read"]
 }
 ' | vault policy write acme_demo_a_read -
@@ -118,8 +108,8 @@ path "secret/data/acme_demo_a/*" {
 Activate kv2 secrets engine and store secrets at 2 different paths
 ```bash
 vault secrets enable kv-v2
-vault kv put secret/data/acme_demo_a/test key=you_should_see_this
-vault kv put secret/data/acme_demo_b/test key=you_cant_see_this
+vault kv put kv-v2/acme_demo_a/test key=you_should_see_this
+vault kv put kv-v2/acme_demo_b/test key=you_cant_see_this
 ```
 
 ## Create Alias and Entity
@@ -144,7 +134,7 @@ Use the shell of the acme pod
 podman exec -it acme /bin/sh
 ```
 
-create acme.sh account
+create acme.sh account (optional if not enforced by vault)
 ```bash
 acme.sh --register-account -m my@example.com
 ```
@@ -182,10 +172,12 @@ For Podman:
 ```bash
 podman-compose down
 podman volume rm pki-demo_tls
+podman volume rm pki-demo_server-tls
 ```
 
 For Docker:
 ```bash
 docker-compose down
 docker volume rm pki-demo_tls
+docker volume rm pki-demo_server-tls
 ```
