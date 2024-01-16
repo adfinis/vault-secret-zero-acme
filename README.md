@@ -96,16 +96,6 @@ vault write auth/cert/certs/acme-dns-podman certificate=@ca-cert.pem allowed_com
 
 ```
 
-```bash
-# Example for a different CN
-vault write auth/cert/certs/app-dns-podman certificate=@ca-cert.pem allowed_common_names="app.dns.podman" token_ttl=15m token_max_ttl=30m token_period=15m policies=vault-app
-```
-
-```bash
-# Globbing for CN 
-# https://github.com/gobwas/glob
-vault write auth/cert/certs/cluster-a-dns-podman certificate=@ca-cert.pem allowed_common_names="*.cluster-a.dns.podman" token_ttl=15m token_max_ttl=30m token_period=15m policies=vault-cluster-a
-```
 ## Activate KV Secrets Engine and provision secrets and policies
 Policy to read and write passwords for path secret/data/acme_demo_a
 ```bash
@@ -144,7 +134,7 @@ Use the shell of the acme pod
 podman exec -it acme /bin/sh
 ```
 
-create acme.sh account
+create acme.sh account (optional if not enforced by vault)
 ```bash
 acme.sh --register-account -m my@example.com
 ```
@@ -182,10 +172,12 @@ For Podman:
 ```bash
 podman-compose down
 podman volume rm pki-demo_tls
+podman volume rm pki-demo_server-tls
 ```
 
 For Docker:
 ```bash
 docker-compose down
 docker volume rm pki-demo_tls
+docker volume rm pki-demo_server-tls
 ```
