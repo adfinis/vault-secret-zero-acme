@@ -16,7 +16,7 @@ mkdir -p $tls_dir
 acme.sh --register-account -m my@example.com
 
 # acme.sh request with automatic CSR
-acme.sh --server https://vault-server:8200/v1/pki/roles/acme-example-com/acme/directory \
+acme.sh --server https://vault-server:8200/v1/pki/roles/acme-dns-podman/acme/directory \
   --insecure \
   --standalone --issue -d acme.dns.podman \
   -k 2048
