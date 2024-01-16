@@ -22,7 +22,7 @@ or
 ```bash
 docker-compose up -d
 ```
-## 
+## Basic Vault Provisioning
 Setup the configuration on the Vault development server:
 Vault server location and credentials
 ```bash
