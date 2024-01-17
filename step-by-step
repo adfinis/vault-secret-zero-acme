@@ -5,7 +5,7 @@
 5. ./provision-vault.sh
 6. podman exec -it acme /bin/sh
 # Step 7 is only needed if you aren't fast enough with the provision-vault script
-7. acme.sh --server https://vault-server:8200/v1/pki/roles/acme-dns-podman/acme/directory --insecure --standalone --issue -d acme.dns.podman -k 2048
+7. acme.sh --server https://vault-server:8200/v1/pki/roles/dns-podman/acme/directory --insecure --standalone --issue -d acme.dns.podman -k 2048
 8.
     curl \
     --insecure \
