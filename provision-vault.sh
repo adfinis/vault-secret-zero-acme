@@ -35,7 +35,7 @@ vault write pki/config/acme \
  allow_role_ext_key_usage=true
 
 # Create internal CA and role to issue client certitificates in the acme.podman.dns network
-vault write -format=json pki/root/generate/internal common_name=podman.dns ttl=768h | jq -r '.data.issuing_ca' > ca-cert.pem
+vault write -format=json pki/root/generate/internal common_name=dns.podman ttl=768h | jq -r '.data.issuing_ca' > ca-cert.pem
 # Make the role issue client certs:
 # - https://developer.hashicorp.com/vault/api-docs/secret/pki#client_flag
 # - https://developer.hashicorp.com/vault/api-docs/secret/pki#server_flag
@@ -43,16 +43,16 @@ vault write -format=json pki/root/generate/internal common_name=podman.dns ttl=7
 #
 # Deliberately choose low ttl for the certificate (only used for first
 # authentication)
-vault write pki/roles/acme-dns-podman allowed_domains=acme.dns.podman allow_subdomains=true allow_bare_domains=true max_ttl=60m ttl=30m \
+vault write pki/roles/dns-podman allowed_domains=acme.dns.podman allow_subdomains=true allow_bare_domains=true max_ttl=60m ttl=30m \
   client_flag=true \
   server_flag=false \
   ext_key_usage=ClientAuth
 
-# Setup basic Cert auth role acme-dns-podman to authenticate clients in the example domain
-# This is a example for pre-provisiong roles to the Client
+# Setup basic Cert auth role acme-dns-podman to authenticate clients in the dns.podman domain
+# This is an example for pre-provisiong roles to the Client
 # https://developer.hashicorp.com/vault/docs/auth/cert
 vault auth enable cert
-vault write auth/cert/certs/acme-dns-podman certificate=@ca-cert.pem allowed_common_names="acme.dns.podman" token_ttl=15m token_max_ttl=30m token_period=15m
+vault write auth/cert/certs/dns-podman certificate=@ca-cert.pem allowed_common_names="*.dns.podman" token_ttl=15m token_max_ttl=30m token_period=15m
 
 # Create policy acme_demo_a
 echo '
