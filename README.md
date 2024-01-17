@@ -1,4 +1,4 @@
-# Issuing TLS client certificates as secret zero with HashiCorp Vault PKI engine and Automated Certificate Management Environment (ACME) protocol
+# Secret zero with HashiCorp Vault PKI engine and Automated Certificate Management Environment (ACME) protocol
 
 This repository contains instructions to demonstrate issuing TLS client certificates as secret zero using<sup>[1]</sup> HashiCorp Vault's PKI engine and its Automated Certificate Management Environment (ACME) protocol <sup>[2]</sup> capability.
 
