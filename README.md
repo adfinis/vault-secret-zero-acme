@@ -23,7 +23,7 @@ This repository contains instructions to demonstrate issuing TLS client certific
 ## Usage
 
 To start the containers:
-This will start a Vault server and a container for ACME 
+This will start a Vault server and a container for ACME
 
 ```bash
 podman-compose up -d
@@ -93,10 +93,10 @@ vault write pki/config/acme \
  allow_role_ext_key_usage=true
 ```
 
-Create internal CA and role to issue client certitificates in the acme.dns.podman network
+Create internal CA and role to issue client certitificates in the dns.podman network
 
 ```bash
-vault write -format=json pki/root/generate/internal common_name=podman.dns ttl=768h | jq -r '.data.issuing_ca' > ca-cert.pem
+vault write -format=json pki/root/generate/internal common_name=dns.podman ttl=768h | jq -r '.data.issuing_ca' > ca-cert.pem
 ```
 
 Add a role to issue client certs:
@@ -105,8 +105,7 @@ Add a role to issue client certs:
 - https://developer.hashicorp.com/vault/api-docs/secret/pki#server_flag
 - https://developer.hashicorp.com/vault/api-docs/secret/pki#ext_key_usage
 
- Deliberately choose low ttl for the certificate (only used for first
- authentication)
+ Deliberately choose low ttl for the certificate
 
 ```bash
 vault write pki/roles/dns-podman allow_bare_domains=true max_ttl=60m ttl=30m \
@@ -232,4 +231,10 @@ curl -k -X GET -H "X-Vault-Token: $(cat token.txt)" https://vault-server:8200/v1
 
 ```bash
 podman-compose down
+```
+
+or
+
+```bash
+docker-compose down
 ```
