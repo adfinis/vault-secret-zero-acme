@@ -216,10 +216,41 @@ Request secret "acme_demo_a/test" which should work
 curl -k -X GET -H "X-Vault-Token: $(cat token.txt)" https://vault-server:8200/v1/kv-v2/data/acme_demo_a/test | jq -r
 ```
 
+Example output:
+
+```bash
+{
+  "request_id": "dcf01663-556c-7e7d-c041-105173f25070",
+  "lease_id": "",
+  "renewable": false,
+  "lease_duration": 0,
+  "data": {
+    "data": {
+      "key": "you_should_see_this"
+    },
+    "metadata": {
+      "created_time": "2024-01-17T08:32:48.188878092Z",
+      "custom_metadata": null,
+      "deletion_time": "",
+      "destroyed": false,
+      "version": 1
+    }
+  },
+  "wrap_info": null,
+  "warnings": null,
+  "auth": null
+}
+```
+
 Request secret "acme_demo_b/test" which shouldn't work as the policy doesn't allow this
 
 ```bash
 curl -k -X GET -H "X-Vault-Token: $(cat token.txt)" https://vault-server:8200/v1/kv-v2/data/acme_demo_b/test | jq -r
+```
+
+Example output:
+
+```bash
 {
   "errors": [
     "1 error occurred:\n\t* permission denied\n\n"
