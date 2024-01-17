@@ -1,11 +1,18 @@
 1. Clone repo
 2. Switch into repo folder
+<<<<<<< Updated upstream
 3. Uncomment line 10 and comment line 9 in the docker-compose.yaml
 4. podman-compose up -d
 5. ./provision-vault.sh
 6. podman exec -it acme /bin/sh
 # Step 7 is only needed if you aren't fast enough with the provision-vault script
 7. acme.sh --server https://vault-server:8200/v1/pki/roles/acme-dns-podman/acme/directory --insecure --standalone --issue -d acme.dns.podman -k 2048
+=======
+3. podman-compose up -d
+4. ./provision-vault.sh
+5. podman exec -it acme /bin/sh
+7. acme.sh --server https://vault-server:8200/v1/pki/roles/dns-podman/acme/directory --insecure --standalone --issue -d acme.dns.podman -k 2048
+>>>>>>> Stashed changes
 8.
     curl \
     --insecure \
